@@ -1,0 +1,4 @@
+# Logs directory
+# Contains daily execution logs from the crawler
+
+*.log

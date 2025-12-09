@@ -1,0 +1,574 @@
+{
+    "metadata": {
+        "version": "1.0.0",
+        "last_updated": "2025-12-09",
+        "description": "Consumer electronics product taxonomy for quantitative price tracking"
+    },
+    "categories": {
+        "GPU": {
+            "display_name": "顯示卡",
+            "category_keywords": [
+                "顯示卡",
+                "VGA",
+                "顯卡",
+                "繪圖卡"
+            ],
+            "exclude_keywords": [
+                "筆電",
+                "筆記型",
+                "NB",
+                "Laptop",
+                "整機",
+                "電競機",
+                "主機",
+                "Acer",
+                "ASUS",
+                "華碩",
+                "Lenovo",
+                "聯想",
+                "HP",
+                "惠普",
+                "Dell",
+                "戴爾",
+                "MSI筆電",
+                "Helios",
+                "Predator",
+                "TUF Gaming",
+                "ROG",
+                "Legion",
+                "OMEN",
+                "Alienware",
+                "Pavilion",
+                "Envy",
+                "Yoga",
+                "ThinkPad",
+                "Vivobook",
+                "吋",
+                "i3-",
+                "i5-",
+                "i7-",
+                "i9-",
+                "Ryzen ",
+                "Ultra ",
+                "HX",
+                "HS",
+                "H/",
+                "/16G",
+                "/32G",
+                "/512G",
+                "/1T",
+                "/2T",
+                "Win11",
+                "Windows",
+                "PHN",
+                "PTN"
+            ],
+            "generations": {
+                "NVIDIA_RTX_5090": {
+                    "models": [
+                        "RTX5090",
+                        "RTX 5090"
+                    ],
+                    "price_range": [
+                        85000,
+                        120000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_5080": {
+                    "models": [
+                        "RTX5080",
+                        "RTX 5080"
+                    ],
+                    "price_range": [
+                        40000,
+                        70000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_5070_Ti": {
+                    "models": [
+                        "RTX5070Ti",
+                        "RTX 5070 Ti",
+                        "RTX5070 Ti"
+                    ],
+                    "price_range": [
+                        25000,
+                        40000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_5070": {
+                    "models": [
+                        "RTX5070",
+                        "RTX 5070"
+                    ],
+                    "price_range": [
+                        20000,
+                        35000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_5060_Ti": {
+                    "models": [
+                        "RTX5060Ti",
+                        "RTX 5060 Ti",
+                        "RTX5060 Ti"
+                    ],
+                    "price_range": [
+                        12000,
+                        18000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_5060": {
+                    "models": [
+                        "RTX5060",
+                        "RTX 5060"
+                    ],
+                    "price_range": [
+                        8000,
+                        15000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_4090": {
+                    "models": [
+                        "RTX4090",
+                        "RTX 4090"
+                    ],
+                    "price_range": [
+                        50000,
+                        75000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_4080_Super": {
+                    "models": [
+                        "RTX4080Super",
+                        "RTX 4080 Super",
+                        "RTX4080 SUPER"
+                    ],
+                    "price_range": [
+                        35000,
+                        50000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_4080": {
+                    "models": [
+                        "RTX4080",
+                        "RTX 4080"
+                    ],
+                    "price_range": [
+                        30000,
+                        45000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_4070_Ti_Super": {
+                    "models": [
+                        "RTX4070TiSuper",
+                        "RTX 4070 Ti Super",
+                        "RTX4070 Ti SUPER"
+                    ],
+                    "price_range": [
+                        25000,
+                        35000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_4070_Ti": {
+                    "models": [
+                        "RTX4070Ti",
+                        "RTX 4070 Ti",
+                        "RTX4070 Ti"
+                    ],
+                    "price_range": [
+                        22000,
+                        30000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_4070_Super": {
+                    "models": [
+                        "RTX4070Super",
+                        "RTX 4070 Super",
+                        "RTX4070 SUPER"
+                    ],
+                    "price_range": [
+                        18000,
+                        25000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_4070": {
+                    "models": [
+                        "RTX4070",
+                        "RTX 4070"
+                    ],
+                    "price_range": [
+                        15000,
+                        22000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_4060_Ti": {
+                    "models": [
+                        "RTX4060Ti",
+                        "RTX 4060 Ti",
+                        "RTX4060 Ti"
+                    ],
+                    "price_range": [
+                        10000,
+                        15000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_4060": {
+                    "models": [
+                        "RTX4060",
+                        "RTX 4060"
+                    ],
+                    "price_range": [
+                        8000,
+                        12000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_3090_Ti": {
+                    "models": [
+                        "RTX3090Ti",
+                        "RTX 3090 Ti",
+                        "RTX3090 Ti"
+                    ],
+                    "price_range": [
+                        25000,
+                        40000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_3090": {
+                    "models": [
+                        "RTX3090",
+                        "RTX 3090"
+                    ],
+                    "price_range": [
+                        20000,
+                        35000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_3080_Ti": {
+                    "models": [
+                        "RTX3080Ti",
+                        "RTX 3080 Ti",
+                        "RTX3080 Ti"
+                    ],
+                    "price_range": [
+                        15000,
+                        25000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_3080": {
+                    "models": [
+                        "RTX3080",
+                        "RTX 3080"
+                    ],
+                    "price_range": [
+                        12000,
+                        20000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_3070_Ti": {
+                    "models": [
+                        "RTX3070Ti",
+                        "RTX 3070 Ti",
+                        "RTX3070 Ti"
+                    ],
+                    "price_range": [
+                        10000,
+                        15000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_3070": {
+                    "models": [
+                        "RTX3070",
+                        "RTX 3070"
+                    ],
+                    "price_range": [
+                        8000,
+                        13000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_3060_Ti": {
+                    "models": [
+                        "RTX3060Ti",
+                        "RTX 3060 Ti",
+                        "RTX3060 Ti"
+                    ],
+                    "price_range": [
+                        7000,
+                        11000
+                    ],
+                    "active": true
+                },
+                "NVIDIA_RTX_3060": {
+                    "models": [
+                        "RTX3060",
+                        "RTX 3060"
+                    ],
+                    "price_range": [
+                        6000,
+                        9000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_7900_XTX": {
+                    "models": [
+                        "RX7900XTX",
+                        "RX 7900 XTX",
+                        "RX7900 XTX"
+                    ],
+                    "price_range": [
+                        25000,
+                        40000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_7900_XT": {
+                    "models": [
+                        "RX7900XT",
+                        "RX 7900 XT",
+                        "RX7900 XT"
+                    ],
+                    "price_range": [
+                        20000,
+                        30000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_7800_XT": {
+                    "models": [
+                        "RX7800XT",
+                        "RX 7800 XT",
+                        "RX7800 XT"
+                    ],
+                    "price_range": [
+                        15000,
+                        22000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_7700_XT": {
+                    "models": [
+                        "RX7700XT",
+                        "RX 7700 XT",
+                        "RX7700 XT"
+                    ],
+                    "price_range": [
+                        12000,
+                        18000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_7600": {
+                    "models": [
+                        "RX7600",
+                        "RX 7600"
+                    ],
+                    "price_range": [
+                        8000,
+                        12000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_6950_XT": {
+                    "models": [
+                        "RX6950XT",
+                        "RX 6950 XT",
+                        "RX6950 XT"
+                    ],
+                    "price_range": [
+                        18000,
+                        28000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_6900_XT": {
+                    "models": [
+                        "RX6900XT",
+                        "RX 6900 XT",
+                        "RX6900 XT"
+                    ],
+                    "price_range": [
+                        15000,
+                        25000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_6800_XT": {
+                    "models": [
+                        "RX6800XT",
+                        "RX 6800 XT",
+                        "RX6800 XT"
+                    ],
+                    "price_range": [
+                        12000,
+                        20000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_6700_XT": {
+                    "models": [
+                        "RX6700XT",
+                        "RX 6700 XT",
+                        "RX6700 XT"
+                    ],
+                    "price_range": [
+                        10000,
+                        15000
+                    ],
+                    "active": true
+                },
+                "AMD_RX_6600_XT": {
+                    "models": [
+                        "RX6600XT",
+                        "RX 6600 XT",
+                        "RX6600 XT"
+                    ],
+                    "price_range": [
+                        6000,
+                        10000
+                    ],
+                    "active": true
+                }
+            }
+        },
+        "RAM": {
+            "display_name": "記憶體",
+            "category_keywords": [
+                "記憶體",
+                "RAM",
+                "DRAM"
+            ],
+            "exclude_keywords": [
+                "筆電",
+                "NB",
+                "SO-DIMM",
+                "SODIMM",
+                "Laptop"
+            ],
+            "generations": {
+                "DDR5": {
+                    "capacities": {
+                        "64GB": [
+                            "DDR5 64GB",
+                            "DDR5 64G",
+                            "DDR5-64GB",
+                            "64GB DDR5"
+                        ],
+                        "32GB": [
+                            "DDR5 32GB",
+                            "DDR5 32G",
+                            "DDR5-32GB",
+                            "32GB DDR5"
+                        ],
+                        "16GB": [
+                            "DDR5 16GB",
+                            "DDR5 16G",
+                            "DDR5-16GB",
+                            "16GB DDR5"
+                        ]
+                    },
+                    "speeds": [
+                        "4800",
+                        "5200",
+                        "5600",
+                        "6000",
+                        "6400",
+                        "6800",
+                        "7200"
+                    ],
+                    "price_range": [
+                        1500,
+                        25000
+                    ],
+                    "active": true
+                },
+                "DDR4": {
+                    "capacities": {
+                        "32GB": [
+                            "DDR4 32GB",
+                            "DDR4 32G",
+                            "DDR4-32GB",
+                            "32GB DDR4"
+                        ],
+                        "16GB": [
+                            "DDR4 16GB",
+                            "DDR4 16G",
+                            "DDR4-16GB",
+                            "16GB DDR4"
+                        ],
+                        "8GB": [
+                            "DDR4 8GB",
+                            "DDR4 8G",
+                            "DDR4-8GB",
+                            "8GB DDR4"
+                        ]
+                    },
+                    "speeds": [
+                        "2400",
+                        "2666",
+                        "3000",
+                        "3200",
+                        "3600"
+                    ],
+                    "price_range": [
+                        500,
+                        10000
+                    ],
+                    "active": true
+                }
+            }
+        }
+    },
+    "global_exclusions": {
+        "description": "全域排除關鍵字（適用所有類別）",
+        "keywords": [
+            "福利品",
+            "二手",
+            "展示品",
+            "良品",
+            "散裝",
+            "拆封",
+            "整機",
+            "套裝",
+            "組合",
+            "PC主機",
+            "電競機",
+            "工作站",
+            "筆電",
+            "筆記型電腦",
+            "NB",
+            "Laptop",
+            "Notebook"
+        ]
+    },
+    "data_quality_rules": {
+        "min_price": 100,
+        "max_price": 200000,
+        "min_name_length": 5,
+        "max_name_length": 200,
+        "required_fields": [
+            "分類",
+            "商品名稱",
+            "價格",
+            "抓取時間"
+        ]
+    }
+}
