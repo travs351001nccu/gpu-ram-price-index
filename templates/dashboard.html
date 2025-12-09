@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPU/RAM Price Index Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>📊 GPU/RAM Price Index</h1>
+                <p class="subtitle">Real-time Taiwan Market Analysis</p>
+            </div>
+            <div class="last-update" id="lastUpdate">
+                Loading...
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Records</div>
+                    <div class="stat-value" id="totalRecords">-</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-content">
+                    <div class="stat-label">Today's Collection</div>
+                    <div class="stat-value" id="todayRecords">-</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-content">
+                    <div class="stat-label">Unique Products</div>
+                    <div class="stat-value" id="uniqueProducts">-</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-content">
+                    <div class="stat-label">Data Range</div>
+                    <div class="stat-value" id="dateRange">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content-grid">
+            <!-- Latest Prices -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>💰 Latest Prices</h2>
+                    <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table id="priceTable">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Generation</th>
+                                    <th>Avg Price</th>
+                                    <th>Min</th>
+                                    <th>Max</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody id="priceTableBody">
+                                <tr>
+                                    <td colspan="6" class="loading">Loading data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Trends Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📈 Price Trends (7 Days)</h2>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Logs -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Recent Crawler Runs</h2>
+                </div>
+                <div class="card-body">
+                    <div class="logs-container" id="logsContainer">
+                        <div class="loading">Loading logs...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let trendChart = null;
+
+        // Load all data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            loadStats();
+            loadLogs();
+            loadHistoricalData();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(loadData, 5 * 60 * 1000);
+        });
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalRecords').textContent = stats.total_records.toLocaleString();
+                document.getElementById('todayRecords').textContent = stats.today_records.toLocaleString();
+                document.getElementById('uniqueProducts').textContent = stats.unique_products;
+                document.getElementById('dateRange').textContent = `${stats.start_date} to ${stats.end_date}`;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('/api/latest');
+                const data = await response.json();
+                
+                const tbody = document.getElementById('priceTableBody');
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="no-data">No data available</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.map(item => `
+                    <tr>
+                        <td><span class="category-badge ${item.category.toLowerCase()}">${item.category}</span></td>
+                        <td><strong>${item.generation}</strong></td>
+                        <td class="price">NT$ ${Math.round(item.avg_price).toLocaleString()}</td>
+                        <td class="price-secondary">NT$ ${Math.round(item.min_price).toLocaleString()}</td>
+                        <td class="price-secondary">NT$ ${Math.round(item.max_price).toLocaleString()}</td>
+                        <td><span class="count-badge">${item.count}</span></td>
+                    </tr>
+                `).join('');
+                
+                // Update last update time
+                if (data.length > 0) {
+                    document.getElementById('lastUpdate').textContent = `Last updated: ${data[0].last_updated}`;
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('priceTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="error">Error loading data</td></tr>';
+            }
+        }
+
+        async function loadHistoricalData() {
+            try {
+                const response = await fetch('/api/historical/7');
+                const data = await response.json();
+                
+                // Group by generation
+                const grouped = {};
+                data.forEach(item => {
+                    const key = `${item.category}_${item.generation}`;
+                    if (!grouped[key]) {
+                        grouped[key] = {
+                            label: `${item.category} ${item.generation}`,
+                            data: []
+                        };
+                    }
+                    grouped[key].data.push({
+                        x: item.date,
+                        y: item.avg_price
+                    });
+                });
+                
+                // Create chart
+                const ctx = document.getElementById('trendChart').getContext('2d');
+                
+                if (trendChart) {
+                    trendChart.destroy();
+                }
+                
+                const colors = [
+                    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+                    '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788'
+                ];
+                
+                const datasets = Object.values(grouped).slice(0, 10).map((item, index) => ({
+                    label: item.label,
+                    data: item.data.reverse(),
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length] + '20',
+                    tension: 0.4,
+                    fill: false
+                }));
+                
+                trendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 10,
+                                    font: { size: 11 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        return `${context.dataset.label}: NT$ ${Math.round(context.parsed.y).toLocaleString()}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'category',
+                                grid: { display: false }
+                            },
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: (value) => 'NT$ ' + value.toLocaleString()
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading historical data:', error);
+            }
+        }
+
+        async function loadLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                const logs = await response.json();
+                
+                const container = document.getElementById('logsContainer');
+                
+                if (logs.length === 0) {
+                    container.innerHTML = '<div class="no-data">No logs available</div>';
+                    return;
+                }
+                
+                container.innerHTML = logs.map(log => `
+                    <div class="log-entry ${log.success ? 'success' : 'failed'}">
+                        <div class="log-icon">${log.success ? '✅' : '❌'}</div>
+                        <div class="log-content">
+                            <div class="log-date">${log.date}</div>
+                            <div class="log-details">
+                                ${log.success ? `Collected ${log.product_count} products` : 'Failed'}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading logs:', error);
+            }
+        }
+    </script>
+</body>
+</html>

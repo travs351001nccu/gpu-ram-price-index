@@ -1,212 +1,180 @@
-# GPU & RAM Price Index - Alternative Data Collection
+# GPU and RAM Price Index
 
-Automated web scraping system for collecting daily GPU and RAM pricing data from Taiwan's consumer electronics market. Built for quantitative analysis and alternative data research.
+An automated data collection system for tracking consumer electronics prices in Taiwan's market, designed for alternative data analysis in quantitative finance.
 
-## Project Overview
+## Overview
 
-**Objective**: Collect 30 days of pricing data to analyze correlation with semiconductor stock prices (TSMC, NVIDIA)
-
-**Data Source**: coolpc.com.tw (Taiwan's leading PC component retailer)
-
-**Collection Period**: December 9, 2025 - January 8, 2026
-
-**Target**: 6,000+ daily price records across 32 GPU models and RAM categories
+This project collects daily pricing data for GPUs and RAM from Taiwan's consumer electronics market over a 30-day period. The goal is to explore potential correlations between consumer electronics prices and semiconductor stock performance (TSMC, NVIDIA).
 
 ## Features
 
-- Automated daily web scraping at 2:00 AM
-- PostgreSQL time-series database
-- Product taxonomy classification (32 GPU models + DDR4/DDR5)
-- Data quality validation and deduplication
-- Automated logging and monitoring
-- Power schedule integration for Mac automation
+- **Automated Daily Collection**: Scheduled web scraping at 2:00 AM daily
+- **Product Classification**: Intelligent taxonomy-based categorization
+- **PostgreSQL Database**: Time-series data storage with indexing
+- **Web Dashboard**: Real-time visualization of price trends
+- **Email Notifications**: Automated status updates
+- **Data Analysis Ready**: Structured data for correlation studies
 
-## Tech Stack
+## Architecture
+
+```
+├── run_crawler.py          # Main web scraper
+├── daily_crawler.py        # Automated wrapper with notifications
+├── dashboard.py            # Flask web dashboard
+├── db_config.py            # Database configuration
+├── email_notifier.py       # Email notification system
+├── product_taxonomy.json   # Product classification rules
+├── query_data.py           # Database query utilities
+├── templates/              # Dashboard HTML templates
+├── static/                 # Dashboard CSS/assets
+└── logs/                   # Execution logs
+```
+
+## Technology Stack
 
 - **Language**: Python 3.9+
 - **Web Scraping**: BeautifulSoup4, Requests
 - **Database**: PostgreSQL
-- **Data Processing**: Pandas
-- **Automation**: Cron, macOS pmset
-- **Encoding**: Big5 (Taiwan market)
-
-## Project Structure
-
-```
-.
-├── run_crawler.py          # Main scraper (fetch, classify, save)
-├── daily_crawler.py        # Automated wrapper with logging
-├── query_data.py           # Data query and analysis
-├── db_config.py            # Database configuration
-├── product_taxonomy.json   # Classification rules (32 GPU + RAM)
-├── cron_setup.txt          # Cron job configuration
-├── check_status.sh         # System monitoring script
-├── setup_schedule.sh       # Power schedule setup
-├── logs/                   # Execution logs
-└── USAGE.md               # Quick reference guide
-```
-
-## Database Schema
-
-### Tables
-
-**products** - Product catalog
-- `product_id`, `category`, `generation`, `product_name`, `brand`
-- `first_seen`, `last_seen`, `is_active`
-
-**daily_prices** - Time-series pricing
-- `date`, `product_id`, `price`, `raw_info`
-
-**daily_index** - Aggregated market indices
-- `date`, `category`, `generation`
-- `avg_price`, `min_price`, `max_price`, `median_price`
-- `std_price`, `product_count`, `volatility`
-
-**data_quality_log** - Validation tracking
-- `date`, `records_fetched`, `records_classified`, `success_rate`
+- **Web Framework**: Flask
+- **Automation**: Cron, macOS Power Schedule
+- **Data Analysis**: Pandas
 
 ## Installation
 
 ### Prerequisites
 
+- Python 3.9 or higher
+- PostgreSQL 12 or higher
+- macOS (for power scheduling)
+
+### Setup
+
+1. Clone the repository:
 ```bash
-# Install Python dependencies
-pip install requests beautifulsoup4 pandas psycopg2-binary
+git clone https://github.com/travs351001nccu/gpu-ram-price-index.git
+cd gpu-ram-price-index
+```
 
-# Install PostgreSQL
-brew install postgresql@15
-brew services start postgresql@15
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-# Create database
+3. Configure database:
+```bash
+# Create PostgreSQL database
 createdb price_index
+
+# Set environment variables
+export PGUSER=your_username
+export PGPASSWORD=your_password
 ```
 
-### Database Setup
-
-```sql
--- Run schema creation (see schema.sql)
-psql price_index < schema.sql
+4. Configure email notifications (optional):
+```bash
+export GMAIL_ADDRESS=your_email@gmail.com
+export GMAIL_APP_PASSWORD=your_app_password
+export NOTIFICATION_EMAIL=recipient@gmail.com
 ```
-
-### Configuration
-
-1. Update `db_config.py` with your PostgreSQL credentials
-2. Set environment variables (optional):
-   ```bash
-   export PGUSER=your_username
-   export PGPASSWORD=your_password
-   ```
 
 ## Usage
 
 ### Manual Execution
 
+Run the crawler manually:
 ```bash
-# Run crawler once
 python3 daily_crawler.py
+```
 
-# Query latest data
+Query collected data:
+```bash
 python3 query_data.py
-
-# Check system status
-./check_status.sh
 ```
 
 ### Automated Execution
 
+Install cron job for daily execution:
 ```bash
-# Install cron job (runs daily at 2:00 AM)
 crontab cron_setup.txt
-
-# Verify installation
-crontab -l
-
-# Set up power schedule (Mac only)
-./setup_schedule.sh
 ```
 
-## Sample Output
-
-```
-Today's Market Index:
-
-category generation      avg_price  min_price  max_price  product_count
-GPU      NVIDIA_RTX_5090   99102.25      92888     103990             61
-GPU      NVIDIA_RTX_5080   43637.24      35888      55990             84
-GPU      NVIDIA_RTX_5070   22182.17      19888      25990             96
-RAM      DDR5               4514.46       2900       7399             13
+Configure power schedule (macOS):
+```bash
+sudo pmset repeat wake MTWRFSU 01:55:00
+sudo pmset repeat sleep MTWRFSU 03:00:00
 ```
 
-## Data Collection Progress
+### Web Dashboard
 
-| Milestone | Date | Records | Status |
-|-----------|------|---------|--------|
-| Day 7 | Dec 15, 2025 | ~1,400 | Pending |
-| Day 14 | Dec 22, 2025 | ~2,800 | Pending |
-| Day 24 | Jan 1, 2026 | ~4,800 | Pending |
-| Day 30 | Jan 8, 2026 | ~6,000 | Target |
+Start the dashboard:
+```bash
+python3 dashboard.py
+```
 
-## Planned Analysis
+Access at: http://localhost:5001
 
-1. **Price Correlation Analysis**
-   - GPU prices vs TSMC/NVIDIA stock prices
-   - Information Coefficient (IC) calculation
-   - Statistical significance testing
+## Data Collection
 
-2. **Time Series Analysis**
-   - Moving averages (MA7, MA30)
-   - Volatility patterns
-   - Seasonal trends
+### Target Products
 
-3. **Visualization Dashboard**
-   - Streamlit web app
-   - Real-time price charts
-   - Market index tracking
+- **GPUs**: NVIDIA RTX 3060, 5060, 5060 Ti, 5070, 5070 Ti, 5080, 5090
+- **RAM**: DDR4, DDR5 modules
 
-## Key Insights (To Be Updated)
+### Data Points
 
-_This section will be populated after 30 days of data collection_
+- Product name and category
+- Daily prices (average, min, max, median)
+- Product availability count
+- Price volatility metrics
+- Timestamp and source information
 
-## Challenges & Solutions
+### Database Schema
 
-**Challenge**: Big5 encoding for Taiwan market  
-**Solution**: `res.encoding = 'big5'` in requests
+**products**: Product catalog with metadata
+**daily_prices**: Individual price records
+**daily_index**: Aggregated daily statistics
 
-**Challenge**: Product classification accuracy  
-**Solution**: JSON-based taxonomy with regex patterns
+## Analysis Goals
 
-**Challenge**: Automated execution reliability  
-**Solution**: Power schedule + cron + comprehensive logging
+1. Track price trends over 30-day period
+2. Identify price volatility patterns
+3. Correlate with semiconductor stock prices (TSMC, NVIDIA)
+4. Explore alternative data signals for quantitative trading
 
-## Future Enhancements
+## Project Timeline
 
-- [ ] Add more retailers (PChome, Shopee)
-- [ ] Expand to CPU and motherboard pricing
-- [ ] Real-time price alerts
-- [ ] API endpoint for data access
-- [ ] Machine learning price prediction
+- **Duration**: 30 days (December 9, 2025 - January 8, 2026)
+- **Target Records**: 6,000+ price points
+- **Collection Frequency**: Daily at 2:00 AM Taiwan time
+
+## Results (After Completion)
+
+Results and analysis will be added after the 30-day collection period:
+- Price trend visualizations
+- Statistical analysis
+- Correlation studies with stock prices
+- Key findings and insights
 
 ## Contributing
 
-This is a personal research project, but suggestions are welcome! Feel free to open an issue.
+This is a research project for academic purposes. Contributions and suggestions are welcome.
 
 ## License
 
-MIT License - See LICENSE file for details
+MIT License - see LICENSE file for details
 
 ## Author
 
-**Travis Cua**  
-Quantitative Research | Alternative Data  
-[LinkedIn](#) | [GitHub](#)
+Travis Cua
+- GitHub: [@travs351001nccu](https://github.com/travs351001nccu)
+- Project: Alternative Data Collection for Quantitative Finance
 
 ## Acknowledgments
 
-- Data source: coolpc.com.tw
-- Inspired by alternative data research in quantitative finance
-- Built as part of a 90-day quant project series
+- Data source: Coolpc Taiwan
+- Built as part of quantitative finance research
+- Demonstrates automated data pipeline development
 
----
+## Disclaimer
 
-**Project Status**: Active Data Collection (Day 1/30)  
-**Last Updated**: December 9, 2025
+This project is for educational and research purposes only. Price data is collected from publicly available sources. Not intended for commercial use.

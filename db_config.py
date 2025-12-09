@@ -29,3 +29,8 @@ class DatabaseConfig:
         }
 
 config = DatabaseConfig()
+
+def get_db_connection():
+    """Get a psycopg2 database connection"""
+    import psycopg2
+    return psycopg2.connect(**config.get_psycopg2_params())
