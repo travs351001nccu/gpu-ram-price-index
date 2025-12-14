@@ -72,11 +72,14 @@ stats = load_data(stats_query)
 
 if not stats.empty:
     with col1:
-        st.metric("Total Records", f"{stats.iloc[0]['total']:,}")
+        total = stats.iloc[0]['total']
+        st.metric("Total Records", f"{int(total if total else 0):,}")
     with col2:
-        st.metric("Collected Today", f"{stats.iloc[0]['today']:,}")
+        today = stats.iloc[0]['today']
+        st.metric("Collected Today", f"{int(today if today else 0):,}")
     with col3:
-        st.metric("Tracked Products", f"{stats.iloc[0]['unique_gens']}")
+        unique = stats.iloc[0]['unique_gens']
+        st.metric("Tracked Products", f"{int(unique if unique else 0)}")
     with col4:
         start_date = stats.iloc[0]['start_date']
         st.metric("Data Since", start_date.strftime('%Y-%m-%d') if start_date else "-")
