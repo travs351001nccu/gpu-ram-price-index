@@ -29,7 +29,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Database Connection
-@st.cache_resource
 def get_connection():
     # Streamlit Cloud handles secrets via st.secrets or env vars
     # We try to use the db_config which looks at OS env vars
