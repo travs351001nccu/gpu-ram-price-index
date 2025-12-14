@@ -42,24 +42,45 @@ def send_email_notification(subject, body, to_email, from_email=None, password=N
         print("Set GMAIL_ADDRESS and GMAIL_APP_PASSWORD environment variables")
         return False
     
+    # Load subscribers
+    subscribers_file = Path(__file__).parent / 'subscribers.txt'
+    subscriber_emails = []
+    if subscribers_file.exists():
+        try:
+            with open(subscribers_file) as f:
+                subscriber_emails = [line.strip() for line in f if line.strip() and '@' in line and not line.strip().startswith('#')]
+        except Exception as e:
+            print(f"Warning: Could not load subscribers: {e}")
+
     try:
         # Create message
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From'] = from_email
-        msg['To'] = to_email
+        msg['To'] = to_email  # Only showing the main recipient (you)
         
         # Add body
         html_part = MIMEText(body, 'html')
         msg.attach(html_part)
         
+        # Combine all recipients
+        all_recipients = [to_email] + subscriber_emails
+        unique_recipients = list(set(all_recipients))
+        
         # Send via Gmail SMTP
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(from_email, password)
-            server.send_message(msg)
-        
-        print(f"✅ Email sent to {to_email}")
+            # Use sendmail to specify recipients explicitly (simulating Bcc)
+            server.sendmail(from_email, unique_recipients, msg.as_string())
+            
+        if subscriber_emails:
+            print(f"✅ Email sent to {to_email} and {len(subscriber_emails)} BCC subscribers")
+        else:
+            print(f"✅ Email sent to {to_email}")
+            
         return True
+        
+
         
     except Exception as e:
         print(f"❌ Failed to send email: {e}")

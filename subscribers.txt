@@ -1,0 +1,3 @@
+# Add one email per line
+# Example:
+# friend@example.com
