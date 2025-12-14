@@ -6,7 +6,7 @@ An automated data collection system for tracking consumer electronics prices in 
 
 This project collects daily pricing data for GPUs and RAM from Taiwan's consumer electronics market over a 30-day period. The goal is to explore potential correlations between consumer electronics prices and semiconductor stock performance (TSMC, NVIDIA).
 
-## 📊 Dashboard Preview
+## Dashboard Preview
 
 ### 1. Market Overview & Weekly Trends
 *Real-time statistics and 7-day price volatility analysis*  
@@ -21,10 +21,10 @@ This project collects daily pricing data for GPUs and RAM from Taiwan's consumer
 ![Detail View](static/dashboard_list.png)
 ![Trend Analysis](static/dashboard_trend.png)
 
-## 📩 Subscribe for Daily Updates
+## Subscribe for Daily Updates
 
 Want to receive the daily price summary in your inbox?
-👉 **[Click here to subscribe via Google Form](YOUR_GOOGLE_FORM_LINK_HERE)**
+**[Click here to subscribe via Google Form](https://forms.gle/8XUzQaDyYzcyuNj99)**
 
 *You can subscribe to get daily price drops, new product alerts, and market trend summaries.*
 
