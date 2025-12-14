@@ -4,6 +4,22 @@ Database Configuration
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
+
+# Load .env file manually if it exists (crucial for local cron jobs)
+env_path = Path(__file__).parent / '.env'
+if env_path.exists():
+    try:
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    # Don't overwrite existing env vars (e.g. from real shell)
+                    if key not in os.environ:
+                        os.environ[key] = value.strip('"\'')
+    except Exception:
+        pass
 
 @dataclass
 class DatabaseConfig:
