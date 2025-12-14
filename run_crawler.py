@@ -23,33 +23,48 @@ def load_taxonomy():
 def fetch_coolpc_data():
     """Fetch data from Coolpc"""
     url = "https://www.coolpc.com.tw/evaluate.php"
-    headers = {"User-Agent": "Mozilla/5.0"}
+    # Use a realistic Chrome User-Agent to avoid blocking
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7"
+    }
     
     print(" Fetching data from Coolpc...")
-    res = requests.get(url, headers=headers, timeout=30)
-    res.encoding = 'big5'
-    soup = BeautifulSoup(res.text, 'html.parser')
-    
-    all_products = []
-    for select in soup.find_all('select'):
-        for group in select.find_all('optgroup'):
-            category = group.get('label', '')
-            for opt in group.find_all('option'):
-                raw_text = opt.text.strip()
-                if not raw_text or raw_text.startswith("---"):
-                    continue
-                
-                price_match = re.search(r'\$\s*(\d+)', raw_text)
-                if price_match:
-                    all_products.append({
-                        '原始分類': category,
-                        '商品名稱': raw_text.split('$')[0].strip().rstrip(','),
-                        '價格': int(price_match.group(1)),
-                        '完整資訊': raw_text
-                    })
-    
-    print(f" Fetched {len(all_products):,} products")
-    return pd.DataFrame(all_products)
+    try:
+        res = requests.get(url, headers=headers, timeout=30)
+        
+        if res.status_code != 200:
+            print(f"❌ Coolpc Error: HTTP {res.status_code}")
+            return pd.DataFrame()
+            
+        res.encoding = 'big5'
+        soup = BeautifulSoup(res.text, 'html.parser')
+        
+        all_products = []
+        for select in soup.find_all('select'):
+            for group in select.find_all('optgroup'):
+                category = group.get('label', '')
+                for opt in group.find_all('option'):
+                    raw_text = opt.text.strip()
+                    if not raw_text or raw_text.startswith("---"):
+                        continue
+                    
+                    price_match = re.search(r'\$\s*(\d+)', raw_text)
+                    if price_match:
+                        all_products.append({
+                            '原始分類': category,
+                            '商品名稱': raw_text.split('$')[0].strip().rstrip(','),
+                            '價格': int(price_match.group(1)),
+                            '完整資訊': raw_text
+                        })
+        
+        print(f" Fetched {len(all_products):,} products from Coolpc")
+        return pd.DataFrame(all_products)
+        
+    except Exception as e:
+        print(f"❌ Coolpc Fetch Error: {e}")
+        return pd.DataFrame()
 
 def classify_products(df, taxonomy):
     """Classify products using taxonomy"""
