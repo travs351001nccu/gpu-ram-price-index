@@ -21,6 +21,13 @@ This project collects daily pricing data for GPUs and RAM from Taiwan's consumer
 ![Detail View](static/dashboard_list.png)
 ![Trend Analysis](static/dashboard_trend.png)
 
+## 📩 Subscribe for Daily Updates
+
+Want to receive the daily price summary in your inbox?
+👉 **[Click here to subscribe via Google Form](YOUR_GOOGLE_FORM_LINK_HERE)**
+
+*You can subscribe to get daily price drops, new product alerts, and market trend summaries.*
+
 ## Features
 
 - **Multi-Source Data Collection**: Automated daily crawlers for **Coolpc (原價屋)** and **PChome 24h**, fetching prices for GPUs and RAM.
