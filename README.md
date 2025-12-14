@@ -6,38 +6,46 @@ An automated data collection system for tracking consumer electronics prices in 
 
 This project collects daily pricing data for GPUs and RAM from Taiwan's consumer electronics market over a 30-day period. The goal is to explore potential correlations between consumer electronics prices and semiconductor stock performance (TSMC, NVIDIA).
 
+## Dashboard Preview
+
+![Dashboard Preview](static/dashboard_preview.png)
+*(Screenshot of the real-time price monitoring dashboard)*
+
 ## Features
 
-- **Automated Daily Collection**: Scheduled web scraping at 2:00 AM daily
-- **Product Classification**: Intelligent taxonomy-based categorization
-- **PostgreSQL Database**: Time-series data storage with indexing
-- **Web Dashboard**: Real-time visualization of price trends
-- **Email Notifications**: Automated status updates
-- **Data Analysis Ready**: Structured data for correlation studies
+- **Multi-Source Data Collection**: Automated daily crawlers for **Coolpc (原價屋)** and **PChome 24h**, fetching prices for GPUs and RAM.
+- **Data Engineering Pipeline**: Robust ETL process using Python, PostgreSQL, and Pandas.
+- **Price Trend One-click Report**: Generates daily Excel reports containing price history, volatility analysis, and cross-platform comparisons.
+- **Real-time Dashboard**: Interactive Flask-based web UI displaying 7-day price fluctuations (increases/decreases) and new product alerts.
+- **DevOps automation**:
+  - **Cron Jobs**: Scheduled execution.
+  - **Power Management**: Uses `pmset` to automatically wake the host machine (Mac Mini) for crawling and sleep afterwards to save energy.
+  - **LaunchAgents**: Background service management for the dashboard.
 
 ## Architecture
 
-```
-├── run_crawler.py          # Main web scraper
-├── daily_crawler.py        # Automated wrapper with notifications
-├── dashboard.py            # Flask web dashboard
-├── db_config.py            # Database configuration
-├── email_notifier.py       # Email notification system
-├── product_taxonomy.json   # Product classification rules
-├── query_data.py           # Database query utilities
-├── templates/              # Dashboard HTML templates
-├── static/                 # Dashboard CSS/assets
-└── logs/                   # Execution logs
+```mermaid
+graph TD
+    A[Cron Job @ 2:00 AM] -->|Triggers| B(daily_crawler.py)
+    B -->|Spawns| C{Scrapers}
+    C -->|Fetch| D[Coolpc Crawler]
+    C -->|Fetch| E[PChome Crawler]
+    D & E -->|Transform| F[Data Cleaning & Normalization]
+    F -->|Load| G[(PostgreSQL Database)]
+    G -->|Query| H[Flask API]
+    H -->|Visualize| I[Web Dashboard]
+    G -->|Export| J[Excel Reports]
+    B -->|Notify| K[Gmail SMTP]
 ```
 
 ## Technology Stack
 
 - **Language**: Python 3.9+
-- **Web Scraping**: BeautifulSoup4, Requests
-- **Database**: PostgreSQL
-- **Web Framework**: Flask
-- **Automation**: Cron, macOS Power Schedule
-- **Data Analysis**: Pandas
+- **Data Engineering**: Pandas, SQLAlchemy, PostgreSQL
+- **Web Scraping**: BeautifulSoup4, Requests (w/ Headers rotation)
+- **Web Framework**: Flask, HTML5/CSS3 (Grid Layout), JavaScript
+- **Automation**: Cron, macOS Power Management (`pmset`), Launchd
+- **Reporting**: OpenPyXL (Excel automation)
 
 ## Installation
 
@@ -45,7 +53,7 @@ This project collects daily pricing data for GPUs and RAM from Taiwan's consumer
 
 - Python 3.9 or higher
 - PostgreSQL 12 or higher
-- macOS (for power scheduling)
+- macOS (recommended for complete power scheduling features)
 
 ### Setup
 
