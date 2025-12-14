@@ -42,15 +42,58 @@ def send_email_notification(subject, body, to_email, from_email=None, password=N
         print("Set GMAIL_ADDRESS and GMAIL_APP_PASSWORD environment variables")
         return False
     
-    # Load subscribers
+    # Load subscribers (Local File)
     subscribers_file = Path(__file__).parent / 'subscribers.txt'
     subscriber_emails = []
+    
+    # 1. Read local file
     if subscribers_file.exists():
         try:
             with open(subscribers_file) as f:
-                subscriber_emails = [line.strip() for line in f if line.strip() and '@' in line and not line.strip().startswith('#')]
+                local_subs = [line.strip() for line in f if line.strip() and '@' in line and not line.strip().startswith('#')]
+                subscriber_emails.extend(local_subs)
         except Exception as e:
-            print(f"Warning: Could not load subscribers: {e}")
+            print(f"Warning: Could not load local subscribers: {e}")
+
+    # 2. Read from Google Sheet (CSV URL)
+    sheet_url = os.getenv('SUBSCRIBERS_SHEET_URL')
+    if sheet_url:
+        try:
+            import pandas as pd
+            print(" Fetching subscribers from Google Sheet...")
+            df = pd.read_csv(sheet_url)
+            
+            # Find the email column (look for 'mail' in header, or check first few rows)
+            email_col = None
+            
+            # First check common column names
+            for col in df.columns:
+                if 'mail' in col.lower() or '電子郵件' in col:
+                    email_col = col
+                    break
+            
+            # If not found, check the first column that looks like emails
+            if not email_col and not df.empty:
+                for col in df.columns:
+                    sample = str(df[col].iloc[0]) if len(df) > 0 else ""
+                    if '@' in sample:
+                        email_col = col
+                        break
+            
+            if email_col:
+                sheet_subs = df[email_col].dropna().astype(str).tolist()
+                # Basic validation
+                valid_sheet_subs = [email.strip() for email in sheet_subs if '@' in email]
+                subscriber_emails.extend(valid_sheet_subs)
+                print(f"  Found {len(valid_sheet_subs)} subscribers from Sheet")
+            else:
+                print("  Warning: Could not find email column in Google Sheet")
+                
+        except Exception as e:
+            print(f"  Warning: Could not fetch from Google Sheet: {e}")
+
+    # Remove duplicates
+    subscriber_emails = list(set(subscriber_emails))
 
     try:
         # Create message
