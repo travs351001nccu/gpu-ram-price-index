@@ -75,6 +75,10 @@ def classify_products(df, taxonomy):
             
             # Match generations
             for gen_name, gen_config in cat_config.get('generations', {}).items():
+                # Skip inactive generations
+                if not gen_config.get('active', True):
+                    continue
+
                 matched = False
                 
                 if 'models' in gen_config:
