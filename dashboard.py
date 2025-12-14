@@ -139,14 +139,24 @@ def get_recent_logs(limit=10):
             
             # Extract key info
             date = log_file.stem.replace('crawler_', '')
-            success = 'completed successfully' in content
+            success = 'completed successfully' in content or 'Crawler Success' in content
             
-            # Extract product count
+            # Extract product count - try multiple patterns
             product_count = 0
             for line in content.split('\n'):
-                if 'Saved' in line and 'products to database' in line:
+                # Try "Collected X products" format (from notification)
+                if 'Collected' in line and 'products' in line:
+                    import re
+                    match = re.search(r'Collected (\d+) products', line)
+                    if match:
+                        product_count = max(product_count, int(match.group(1)))
+                # Try "Saved X products" format (old format)
+                elif 'Saved' in line and 'products to database' in line:
                     try:
-                        product_count = int(line.split()[1])
+                        parts = line.split()
+                        for i, p in enumerate(parts):
+                            if p == 'Saved' and i+1 < len(parts):
+                                product_count = max(product_count, int(parts[i+1]))
                     except:
                         pass
             
@@ -190,6 +200,256 @@ def api_stats():
 def api_logs():
     """API endpoint for recent logs"""
     return jsonify(get_recent_logs())
+
+
+@app.route('/api/products/<generation>')
+def api_products(generation):
+    """Get all products for a generation with today vs yesterday price"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Get products with today's and yesterday's prices
+    query = """
+    WITH today_prices AS (
+        SELECT p.product_id, p.product_name, p.brand, dp.price as today_price, COALESCE(p.source, 'Coolpc') as source
+        FROM products p
+        JOIN daily_prices dp ON p.product_id = dp.product_id
+        WHERE p.generation = %s AND dp.date = CURRENT_DATE
+    ),
+    yesterday_prices AS (
+        SELECT p.product_id, dp.price as yesterday_price
+        FROM products p
+        JOIN daily_prices dp ON p.product_id = dp.product_id
+        WHERE p.generation = %s AND dp.date = CURRENT_DATE - INTERVAL '1 day'
+    )
+    SELECT 
+        t.product_id,
+        t.product_name,
+        t.brand,
+        t.today_price,
+        COALESCE(y.yesterday_price, t.today_price) as yesterday_price,
+        t.source
+    FROM today_prices t
+    LEFT JOIN yesterday_prices y ON t.product_id = y.product_id
+    ORDER BY t.source, t.today_price DESC
+    """
+    
+    cur.execute(query, (generation, generation))
+    results = cur.fetchall()
+    
+    products = []
+    for row in results:
+        today_price = float(row[3])
+        yesterday_price = float(row[4])
+        change = 0
+        if yesterday_price > 0:
+            change = ((today_price - yesterday_price) / yesterday_price) * 100
+        
+        products.append({
+            'product_id': row[0],
+            'product_name': row[1],
+            'brand': row[2],
+            'today_price': today_price,
+            'yesterday_price': yesterday_price,
+            'change_percent': round(change, 2),
+            'source': row[5]
+        })
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify(products)
+
+
+@app.route('/api/product/<int:product_id>/history')
+def api_product_history(product_id):
+    """Get price history for a specific product"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Get product info
+    cur.execute("""
+        SELECT product_name, brand, category, generation, first_seen
+        FROM products
+        WHERE product_id = %s
+    """, (product_id,))
+    
+    product_info = cur.fetchone()
+    if not product_info:
+        return jsonify({'error': 'Product not found'}), 404
+    
+    # Get price history (last 30 days)
+    cur.execute("""
+        SELECT date, price
+        FROM daily_prices
+        WHERE product_id = %s
+        ORDER BY date DESC
+        LIMIT 30
+    """, (product_id,))
+    
+    history = cur.fetchall()
+    
+    # Calculate stats
+    prices = [float(h[1]) for h in history]
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify({
+        'product_id': product_id,
+        'product_name': product_info[0],
+        'brand': product_info[1],
+        'category': product_info[2],
+        'generation': product_info[3],
+        'first_seen': product_info[4].strftime('%Y-%m-%d') if product_info[4] else None,
+        'history': [
+            {'date': h[0].strftime('%Y-%m-%d'), 'price': float(h[1])}
+            for h in reversed(history)
+        ],
+        'stats': {
+            'min_price': min(prices) if prices else 0,
+            'max_price': max(prices) if prices else 0,
+            'current_price': prices[0] if prices else 0,
+            'days_tracked': len(prices)
+        }
+    })
+
+
+@app.route('/api/comparison')
+def api_comparison():
+    """Get cross-source price comparison"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    query = """
+    WITH source_prices AS (
+        SELECT 
+            p.category,
+            p.generation,
+            COALESCE(p.source, 'Coolpc') as source,
+            ROUND(AVG(dp.price)::numeric, 0) as avg_price,
+            MIN(dp.price) as min_price,
+            COUNT(*) as product_count
+        FROM products p
+        JOIN daily_prices dp ON p.product_id = dp.product_id
+        WHERE dp.date = CURRENT_DATE
+        GROUP BY p.category, p.generation, p.source
+    ),
+    all_generations AS (
+        SELECT DISTINCT category, generation FROM source_prices
+    )
+    SELECT 
+        ag.category,
+        ag.generation,
+        c.avg_price as coolpc_avg,
+        c.min_price as coolpc_min,
+        COALESCE(c.product_count, 0) as coolpc_count,
+        p.avg_price as pchome_avg,
+        p.min_price as pchome_min,
+        COALESCE(p.product_count, 0) as pchome_count,
+        CASE 
+            WHEN c.avg_price > 0 AND p.avg_price > 0 
+            THEN ROUND(p.avg_price - c.avg_price) 
+            ELSE NULL 
+        END as price_diff,
+        CASE 
+            WHEN c.min_price IS NOT NULL AND p.min_price IS NOT NULL
+            THEN CASE WHEN c.min_price < p.min_price THEN 'Coolpc' ELSE 'PChome' END
+            WHEN c.min_price IS NOT NULL THEN 'Coolpc'
+            WHEN p.min_price IS NOT NULL THEN 'PChome'
+            ELSE NULL
+        END as cheaper
+    FROM all_generations ag
+    LEFT JOIN source_prices c ON ag.category = c.category AND ag.generation = c.generation AND c.source = 'Coolpc'
+    LEFT JOIN source_prices p ON ag.category = p.category AND ag.generation = p.generation AND p.source = 'PChome'
+    WHERE c.avg_price IS NOT NULL OR p.avg_price IS NOT NULL
+    ORDER BY ag.category, ag.generation
+    """
+    
+    cur.execute(query)
+    results = cur.fetchall()
+    
+    comparison = []
+    for row in results:
+        comparison.append({
+            'category': row[0],
+            'generation': row[1],
+            'coolpc': {
+                'avg': float(row[2]) if row[2] else None,
+                'min': float(row[3]) if row[3] else None,
+                'count': row[4] if row[4] else 0
+            },
+            'pchome': {
+                'avg': float(row[5]) if row[5] else None,
+                'min': float(row[6]) if row[6] else None,
+                'count': row[7] if row[7] else 0
+            },
+            'price_diff': float(row[8]) if row[8] else None,
+            'cheaper': row[9]
+        })
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify(comparison)
+
+
+@app.route('/api/weekly-changes')
+def api_weekly_changes():
+    """Get 7-day price changes for all products"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    query = """
+    WITH daily_data AS (
+        SELECT 
+            dp.product_id,
+            dp.date,
+            dp.price::numeric,
+            COALESCE(dp.source, 'Coolpc') as source,
+            LAG(dp.price::numeric) OVER (PARTITION BY dp.product_id ORDER BY dp.date) as prev_price,
+            LAG(dp.date) OVER (PARTITION BY dp.product_id ORDER BY dp.date) as prev_date
+        FROM daily_prices dp
+        WHERE dp.date >= CURRENT_DATE - INTERVAL '7 days'
+    )
+    SELECT 
+        p.product_name,
+        p.category,
+        p.generation,
+        dd.source,
+        dd.prev_date as from_date,
+        dd.date as to_date,
+        dd.prev_price as old_price,
+        dd.price as new_price,
+        ((dd.price - dd.prev_price) / dd.prev_price * 100) as change_pct
+    FROM daily_data dd
+    JOIN products p ON dd.product_id = p.product_id
+    WHERE dd.prev_price IS NOT NULL
+    AND ABS(dd.price - dd.prev_price) / dd.prev_price > 0.005
+    ORDER BY dd.date DESC, change_pct DESC
+    """
+    
+    cur.execute(query)
+    results = cur.fetchall()
+    
+    changes = []
+    for row in results:
+        changes.append({
+            'product_name': row[0],
+            'category': row[1],
+            'generation': row[2],
+            'source': row[3],
+            'from_date': row[4].strftime('%m/%d') if row[4] else '',
+            'to_date': row[5].strftime('%m/%d') if row[5] else '',
+            'old_price': float(row[6]),
+            'new_price': float(row[7]),
+            'change_pct': float(row[8])
+        })
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify(changes)
 
 
 if __name__ == '__main__':

@@ -119,21 +119,21 @@ def save_to_database(df):
             
             # Insert/update product
             cursor.execute("""
-                INSERT INTO products (category, generation, product_name, brand, first_seen, last_seen)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO products (category, generation, product_name, brand, first_seen, last_seen, source)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (product_name, generation) 
-                DO UPDATE SET last_seen = EXCLUDED.last_seen, is_active = TRUE
+                DO UPDATE SET last_seen = EXCLUDED.last_seen, is_active = TRUE, source = EXCLUDED.source
                 RETURNING product_id
-            """, (row['類別'], row['世代'], row['商品名稱'], brand, today, today))
+            """, (row['類別'], row['世代'], row['商品名稱'], brand, today, today, 'Coolpc'))
             
             product_id = cursor.fetchone()[0]
             
             # Insert price
             cursor.execute("""
-                INSERT INTO daily_prices (date, product_id, price, raw_info)
-                VALUES (%s, %s, %s, %s)
-ON CONFLICT (date, product_id) DO UPDATE SET price = EXCLUDED.price
-            """, (today, product_id, row['價格'], Json({'完整資訊': row['完整資訊']})))
+                INSERT INTO daily_prices (date, product_id, price, source, raw_info)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (date, product_id) DO UPDATE SET price = EXCLUDED.price, source = EXCLUDED.source
+            """, (today, product_id, row['價格'], 'Coolpc', Json({'完整資訊': row['完整資訊']})))
             
             new_products += 1
         
@@ -177,30 +177,57 @@ def main():
     # Load taxonomy
     taxonomy = load_taxonomy()
     
-    # Fetch data
+    # ===== COOLPC =====
+    print("\n📦 Source 1: Coolpc")
     raw_df = fetch_coolpc_data()
-    if raw_df.empty:
-        print(" No data fetched")
-        return
+    if not raw_df.empty:
+        classified_df = classify_products(raw_df, taxonomy)
+        if not classified_df.empty:
+            save_to_database(classified_df)
     
-    # Classify
-    classified_df = classify_products(raw_df, taxonomy)
-    if classified_df.empty:
-        print("  No products matched taxonomy")
-        return
+    # ===== PCHOME =====
+    print("\n📦 Source 2: PChome 24h")
+    try:
+        from pchome_crawler import fetch_pchome_data, save_pchome_to_database
+        pchome_df = fetch_pchome_data()
+        if not pchome_df.empty:
+            save_pchome_to_database(pchome_df)
+    except ImportError as e:
+        print(f"  Warning: PChome crawler not available: {e}")
+    except Exception as e:
+        print(f"  Error fetching PChome data: {e}")
     
-    # Save to database
-    save_to_database(classified_df)
+    # Display combined summary
+    print("\n" + "=" * 60)
+    print(" Today's Market Index (Combined)")
+    print("=" * 60)
     
-    # Display summary
-    summary = classified_df.groupby(['類別', '世代']).agg({'價格': ['mean', 'min', 'max', 'count']}).round(0)
-    summary.columns = ['平均價格', '最低價格', '最高價格', '商品數']
+    try:
+        conn = psycopg2.connect(**config.get_psycopg2_params())
+        summary_query = """
+            SELECT 
+                COALESCE(p.source, 'Coolpc') as source,
+                p.category,
+                p.generation,
+                COUNT(*) as count,
+                ROUND(AVG(dp.price)::numeric, 0) as avg_price
+            FROM products p
+            JOIN daily_prices dp ON p.product_id = dp.product_id
+            WHERE dp.date = CURRENT_DATE
+            GROUP BY p.source, p.category, p.generation
+            ORDER BY p.category, p.generation, p.source
+        """
+        summary_df = pd.read_sql_query(summary_query, conn)
+        conn.close()
+        
+        if not summary_df.empty:
+            print(summary_df.to_string(index=False))
+    except Exception as e:
+        print(f"  Could not load summary: {e}")
     
-    print("\n Today's Market Index:")
-    print(summary.to_string())
-    
-    print("\n Crawler completed successfully!")
+    print("\n✅ Crawler completed successfully!")
     print("=" * 60)
 
 if __name__ == "__main__":
     main()
+
